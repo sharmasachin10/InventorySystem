@@ -1,0 +1,76 @@
+1. Database Interactions:
+	a. Detail how your API will interact with the database to perform these operations:
+	1. Retrieving Product Information:
+	
+	(i) Retrieving a single product by ID (GET /products/{product_id}):
+		Query the database using the product ID.
+		Return the product details if found.
+
+	(ii) Retrieving a list of all products with pagination (GET /products):
+		Use SQLAlchemy's paginate method to retrieve a paginated list of products.
+		Optimize by indexing frequently queried fields in the database.
+	
+	(iii) Updating Product Information:
+		Updating the price and stock level of a product (PATCH /products/{product_id}):
+		Query the database to retrieve the product by ID.
+		Update the product's price and stock level based on the request data.
+		Commit the changes to the database.
+	
+	(iv) Searching for Products:
+		Searching for products based on name or price range (GET /products/search):
+		Use SQLAlchemy to build a query based on the provided parameters.
+		Filter the products based on the search criteria.
+		Return the matching products.
+
+
+2. Caching Strategy:
+	a. Propose a caching strategy to enhance the performance of the API:
+	Caching Implementation:
+
+	Utilize a caching server (e.g., Redis) for read-heavy operations.
+	Cache individual product details with an appropriate expiration time.
+	Cache Invalidation:
+	Implement cache versioning or unique cache keys to easily invalidate the cache.
+	Invalidate the cache after update operations by updating the cache version or removing specific cache entries.
+
+
+4. Data Consistency:
+	a. Discuss how you would ensure data consistency between the cache and the database:
+	After Update Operations:
+	After updating product information in the database, invalidate the corresponding cache entries or update the cache version.
+	Ensure that cache updates and database updates are performed atomically to maintain consistency.
+
+
+5. Scalability:
+	a. Briefly describe how your API design would scale to handle a large number of requests:
+	
+	Stateless Design:
+	Design the API to be stateless, allowing for horizontal scaling by adding more server instances.
+	Use load balancing to distribute incoming requests across multiple server instances.
+	
+	Database Scaling:
+	Use a scalable database solution or sharding strategy to handle increased data volume.
+	Consider database replication or clustering for read-heavy workloads.
+	
+	Caching for Performance:
+	Utilize caching to alleviate the load on the database, especially for read-heavy operations.
+	Employ a distributed caching solution for better scalability.
+	
+	Optimized Queries:
+	Optimize database queries with proper indexing and query optimization techniques.
+	Use database connection pooling to efficiently manage database connections.
+	This design approach aims to create a performant, scalable, and reliable API by combining efficient database interactions, caching strategies, robust error handling, data consistency measures, and considerations for scalability. Adjustments may be necessary based on specific project requirements and the nature of the data being managed.
+
+
+Rate Limiting:
+1) Use Flask-Limiter:
+Flask-Limiter is an extension  that provides rate limiting functionality. We can set limits based on IP addresses, API routes, or user-specific identifiers
+
+2) Include rate limit information in the HTTP headers of API responses.
+Clients can check these headers for their current rate limit status.
+
+3) Utilize monitoring tools to track API usage and identify potential abuse.
+Monitor error rates, response times, and rate-limit-related headers.
+Based on real-time monitoring, adjust rate limits dynamically to handle varying loads.
+Consider applying more stringent limits during peak usage periods
+
