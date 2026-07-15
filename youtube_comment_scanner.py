@@ -24,7 +24,7 @@ import re
 import sys
 import csv
 from datetime import datetime
-from youtube_comment_downloader import YoutubeCommentDownloader, SORT_BY_RECENT
+from youtube_comment_downloader import YoutubeCommentDownloader, SORT_BY_RECENT, SORT_BY_POPULAR
 
 # ---------------------------------------------------------------------------
 # Configuration — edit this list to add / remove phrases to detect
@@ -116,51 +116,78 @@ def is_harmful(text: str) -> tuple[bool, str]:
 # Comment fetching (no API key — uses youtube-comment-downloader)
 # ---------------------------------------------------------------------------
 
-def fetch_all_comments(video_url: str, video_id: str) -> list[dict]:
-    """
-    Download every comment (top-level + replies) for the given video URL.
-    Returns a list of normalised comment dicts.
-    """
-    downloader = YoutubeCommentDownloader()
-    all_comments = []
-    count = 0
+def _normalise(raw: dict, video_id: str) -> dict:
+    """Convert a raw library comment dict to our normalised format."""
+    cid = raw.get("cid", "")
+    is_reply = raw.get("reply", False)
+    parent_id = cid.rsplit(".", 1)[0] if (is_reply and "." in cid) else ""
+    return {
+        "comment_id": cid,
+        "author": raw.get("author", "Unknown"),
+        "text": raw.get("text", ""),
+        "published_at": raw.get("time", ""),
+        "like_count": raw.get("votes", 0),
+        "is_reply": is_reply,
+        "parent_id": parent_id,
+        "link": comment_link(video_id, cid),
+    }
 
-    print(f"\nFetching comments for video: {video_id}")
-    print("(This may take a few minutes for videos with many comments...)\n")
 
+def _fetch_pass(downloader: YoutubeCommentDownloader, video_url: str,
+                video_id: str, sort_by: int, label: str,
+                seen_ids: set) -> list[dict]:
+    """
+    Run one fetch pass with the given sort order.
+    Only returns comments whose IDs have not been seen yet (deduplication).
+    """
+    results = []
+    local_count = 0
     try:
-        for raw in downloader.get_comments_from_url(video_url, sort_by=SORT_BY_RECENT):
+        for raw in downloader.get_comments_from_url(video_url, sort_by=sort_by):
             cid = raw.get("cid", "")
-            is_reply = raw.get("reply", False)
-            # Reply IDs are formatted as "<parent_id>.<reply_id>"; guard against missing dot
-            if is_reply and "." in cid:
-                parent_id = cid.rsplit(".", 1)[0]
-            else:
-                parent_id = ""
-            all_comments.append({
-                "comment_id": cid,
-                "author": raw.get("author", "Unknown"),
-                "text": raw.get("text", ""),
-                "published_at": raw.get("time", ""),
-                "like_count": raw.get("votes", 0),
-                "is_reply": is_reply,
-                "parent_id": parent_id,
-                "link": comment_link(video_id, cid),
-            })
-            count += 1
-            if count % 200 == 0:
-                print(f"  {count} comments fetched so far...", flush=True)
+            if not cid or cid in seen_ids:
+                continue
+            seen_ids.add(cid)
+            results.append(_normalise(raw, video_id))
+            local_count += 1
+            if local_count % 500 == 0:
+                print(f"  [{label}] {local_count} new comments so far...", flush=True)
     except Exception as exc:
         print(
-            f"\nError while fetching comments: {exc}\n"
-            "Possible causes: invalid URL, network issue, or the video has comments disabled.",
+            f"\n[{label}] Stopped early: {exc}",
             file=sys.stderr,
         )
-        if not all_comments:
-            sys.exit(1)
-        print(f"Continuing with {count} comments collected before the error.\n")
+        if not results:
+            return results
+    print(f"  [{label}] pass complete — {local_count} unique comments collected.")
+    return results
 
-    print(f"  Done. Total comments fetched: {count}")
+
+def fetch_all_comments(video_url: str, video_id: str) -> list[dict]:
+    """
+    Download comments for the given video URL using two sort passes
+    (Most Popular + Most Recent) and deduplicate by comment ID.
+    This maximises the number of comments retrieved without an API key.
+
+    Note: YouTube's internal API does not expose every comment on a large
+    video through its public web interface. The two-pass approach is the
+    best achievable without a YouTube Data API v3 key.
+    """
+    downloader = YoutubeCommentDownloader()
+    seen_ids: set = set()
+
+    print(f"\nFetching comments for video: {video_id}")
+    print("Running two passes (Popular + Recent) to maximise coverage...")
+    print("(This may take several minutes for large videos.)\n")
+
+    pass1 = _fetch_pass(downloader, video_url, video_id, SORT_BY_POPULAR, "Popular", seen_ids)
+    pass2 = _fetch_pass(downloader, video_url, video_id, SORT_BY_RECENT,  "Recent",  seen_ids)
+
+    all_comments = pass1 + pass2
+    print(f"\n  Done. Total unique comments fetched: {len(all_comments)}")
+    if not all_comments:
+        print("ERROR: No comments were fetched. Check the URL or your network.", file=sys.stderr)
+        sys.exit(1)
     return all_comments
 
 # ---------------------------------------------------------------------------
