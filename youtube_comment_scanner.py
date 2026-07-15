@@ -34,9 +34,7 @@ MAX_DISPLAY_TEXT_LENGTH = 200  # characters shown in terminal output per comment
 
 HARMFUL_KEYWORDS = [
     # death threats / physical violence
-    "kill you", "i'll kill", "i will kill", "gonna kill", "going to kill",
-    "murder you", "i'll murder", "shoot you", "i will shoot",
-    "stab you", "i'll stab", "beat you up", "beat you to death",
+    "kill", "murder", "shoot", "stab", "beat", "death",
     "hurt you", "harm you", "wish you dead", "hope you die",
     "you should die", "go die", "kys", "kill yourself",
     "end your life", "take your life", "death threat", "bomb threat",
