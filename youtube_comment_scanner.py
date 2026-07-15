@@ -33,15 +33,52 @@ from youtube_comment_downloader import YoutubeCommentDownloader, SORT_BY_RECENT
 MAX_DISPLAY_TEXT_LENGTH = 200  # characters shown in terminal output per comment
 
 HARMFUL_KEYWORDS = [
-    # death threats / physical violence
+    # ----------------------------------------------------------------
+    # English — death threats / physical violence
+    # ----------------------------------------------------------------
     "kill", "murder", "shoot", "stab", "beat", "death",
     "hurt you", "harm you", "wish you dead", "hope you die",
     "you should die", "go die", "kys", "kill yourself",
     "end your life", "take your life", "death threat", "bomb threat",
     "i'll find you", "i will find you", "come for you", "hunting you",
     "cut you", "i'll cut", "choke you", "strangle you",
-    # severe derogatory language
+    # English — severe derogatory
     "go to hell", "rot in hell", "burn in hell",
+    "son of a bitch", "piece of shit", "motherfucker", "fuck you",
+    "you bastard", "you idiot", "you moron", "you retard",
+    "go fuck yourself", "get lost", "worthless", "disgusting",
+
+    # ----------------------------------------------------------------
+    # Hindi — threats / violence (Devanagari script)
+    # ----------------------------------------------------------------
+    "मार डालूंगा", "जान से मार", "खून कर दूंगा", "तुझे मार दूंगा",
+    "मर जा", "मर जाओ", "मौत", "तेरी मौत",
+    "काट दूंगा", "तोड़ दूंगा", "जला दूंगा",
+    "ढूंढ लूंगा", "छोड़ूंगा नहीं",
+
+    # Hindi — abuses (Devanagari script)
+    "मादरचोद", "भड़वा", "भड़वे", "रंडी", "कमीना", "कमीने",
+    "हरामी", "हरामजादा", "हरामजादे", "कुत्ता", "कुत्ते",
+    "सुअर", "गधा", "गधे", "बेशर्म", "बेहया",
+    "चूतिया", "चूतिये", "साले", "साली", "बकवास",
+    "निकल जा", "मुंह बंद कर",
+
+    # ----------------------------------------------------------------
+    # Hindi — threats / violence (Roman/transliterated — common on YouTube)
+    # ----------------------------------------------------------------
+    "maar dunga", "jaan se maar", "khoon kar dunga", "tujhe maar dunga",
+    "mar ja", "mar jao", "maut", "teri maut",
+    "kaat dunga", "tod dunga", "jala dunga",
+    "dhundh lunga", "chhodunga nahi",
+
+    # Hindi — abuses (Roman/transliterated)
+    "madarchod", "madarcho", "bhadwa", "bhadwe", "randi",
+    "kamina", "kamine", "harami", "haramzada", "haramzade",
+    "kutta", "kutte", "suar", "gadha", "gadhe",
+    "besharam", "behaya", "chutiya", "chutiye",
+    "saale", "saali", "bakwas",
+    "nikal ja", "muh band kar", "teri maa", "teri behan",
+    "mc", "bc", "bhenchod", "bhencho",
 ]
 
 # ---------------------------------------------------------------------------
