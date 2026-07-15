@@ -148,7 +148,7 @@ def _api_call_with_retry(request):
                 delay *= 2
             else:
                 raise
-    return None  # unreachable, but satisfies type checkers
+    # All attempts exhausted — the last raise above will have propagated the exception.
 
 # ---------------------------------------------------------------------------
 # Comment fetching via YouTube Data API v3
@@ -247,15 +247,9 @@ def fetch_all_comments(youtube, video_id: str) -> list[dict]:
             if total_replies == 0:
                 continue
 
-            # Inline replies (≤ 5, included in the thread response)
-            inline_replies = (
-                thread.get("replies", {}).get("comments", [])
-                if total_replies <= 5
-                else []
-            )
-
-            if inline_replies:
-                for reply_item in inline_replies:
+            if 0 < total_replies <= 5:
+                # All replies are already inlined in the thread response
+                for reply_item in thread.get("replies", {}).get("comments", []):
                     r_snippet = reply_item["snippet"]
                     r_cid = reply_item["id"]
                     all_comments.append({
@@ -269,7 +263,7 @@ def fetch_all_comments(youtube, video_id: str) -> list[dict]:
                         "link": comment_link(video_id, r_cid),
                     })
             else:
-                # More than 5 replies — fetch them all via comments.list
+                # More than 5 replies — fetch all pages via comments.list
                 extra_replies = fetch_replies(youtube, thread_id, video_id)
                 all_comments.extend(extra_replies)
 
